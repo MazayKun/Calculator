@@ -3,11 +3,12 @@ package ru.mikheev.kirill;
 import ru.mikheev.kirill.interfaces.ExpressionMember;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Engine {
-    String[] members = {"\\d+", "\\)", "\\(", "\\-", "\\*", "\\+", "/"};
+    String[] members = {"\\d+", "\\)", "\\(", "\\-", "\\*", "\\+", "/", "\\^"};
     String template = "";
     String corrector = "";
     Pattern pattern;
@@ -23,6 +24,7 @@ public class Engine {
     }
     Matcher matcher;
     ExpressionMember root;
+    Stack<String> brackets;
 
     public Engine(){
 
@@ -30,8 +32,17 @@ public class Engine {
 
     public void read(String expression){
         matcher = pattern.matcher(expression);
-        root = read();
-        System.out.println(root.getValue());
+        brackets = new Stack<>();
+        try {
+            root = read();
+            if(brackets.empty()) {
+                System.out.println(root.getValue());
+            }else {
+                System.out.println("Wrong expression, too few brackets");
+            }
+        }catch (NullPointerException e){
+            System.out.println("Wrong expression, excess : " + e.getMessage());
+        }
     }
 
     public boolean verify(String expression){
@@ -41,15 +52,18 @@ public class Engine {
         return false;
     }
 
-    private ExpressionMember read(){
+    private ExpressionMember read() throws NullPointerException{
         ExpressionMember lastMember = null;
         Operations lastOperation = null;
         while(matcher.find()){
             switch (matcher.group()){
                 case "(" : {
+                    brackets.push("(");
                     if(lastMember == null){
                         lastMember = read();
-                        ((SubExpression)lastMember).setNewLevel();
+                        if(lastMember instanceof  SubExpression) {
+                            ((SubExpression) lastMember).setNewLevel();
+                        }
                         break;
                     }
                     ArrayList<ExpressionMember> newMain = new ArrayList<>();
@@ -61,25 +75,54 @@ public class Engine {
                         newMain.add(tmp);
                         lastMember = new SubExpression(newMain, lastOperation);
                     }
+                    lastOperation = null;
                     break;
                 }
                 case ")" : {
+                    if(brackets.empty()){
+                        throw new NullPointerException(")");
+                    }
+                    brackets.pop();
                     return lastMember;
                 }
                 case "+" : {
+                    if(lastOperation != null){
+                        throw new NullPointerException("+");
+                    }
                     lastOperation = Operations.ADDITION;
                     break;
                 }
                 case "-" : {
-                    lastOperation = Operations.SUBTRACTION;
+                    if(lastMember == null){
+                        matcher.find();
+                        lastMember = new Token(-1 * Double.parseDouble(matcher.group()));
+                    }else {
+                        if(lastOperation != null){
+                            throw new NullPointerException("-");
+                        }
+                        lastOperation = Operations.SUBTRACTION;
+                    }
                     break;
                 }
                 case "/" : {
+                    if(lastOperation != null){
+                        throw new NullPointerException("/");
+                    }
                     lastOperation = Operations.DIVISION;
                     break;
                 }
                 case "*" : {
+                    if(lastOperation != null){
+                        throw new NullPointerException("*");
+                    }
                     lastOperation = Operations.MULTIPLICATION;
+                    break;
+                }
+                case "^" : {
+                    if(lastOperation != null){
+                        throw new NullPointerException("^");
+                    }
+                    lastOperation = Operations.EXTENSION;
                     break;
                 }
                 default:{
@@ -96,6 +139,7 @@ public class Engine {
                     }else{
                         lastMember = new Token(Double.parseDouble(matcher.group()));
                     }
+                    lastOperation = null;
                 }
             }
         }
