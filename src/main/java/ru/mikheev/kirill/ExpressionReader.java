@@ -4,7 +4,7 @@ public class ExpressionReader {
     public static void main(String argc[]){
         System.out.println("Puff");
         Engine engine = new Engine();
-        engine.read("1 + (-1)");
+        engine.read("1 + 2 * 2 * 2 * 2");
 
     }
 }
