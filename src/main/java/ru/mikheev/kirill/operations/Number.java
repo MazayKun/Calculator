@@ -2,7 +2,7 @@ package ru.mikheev.kirill.operations;
 
 import ru.mikheev.kirill.operations.builder.OperationCreationMethod;
 
-public class Number implements MathOperation{
+public class Number implements ExpressionMember {
 
     private double value;
 
@@ -11,25 +11,19 @@ public class Number implements MathOperation{
     }
 
     @Override
-    public double getCalculatedValue() {
+    public double getValue() {
         return value;
     }
 
     @Override
-    public void rotateOperation(MathOperation additionalArg, OperationCreationMethod builder) {
-        throw new RuntimeException("Токен числа не поддерживает операцию вращения");
+    public OperationPriority getPriority() {
+        return OperationPriority.TOKEN_PRIORITY;
     }
 
     @Override
-    public int getPriorityValue() {
-        return OperationPriority.TOKEN_PRIORITY.getPriorityValue();
-    }
-
-    @Override
-    public void setBracketsPriority() {}
-
-    @Override
-    public int comparePriority(MathOperation mathOperation) {
-        return 1;
+    public ExpressionMember rotateOperation(ExpressionMember rightExpression,
+                                            OperationCreationMethod generalOperationBuilder,
+                                            OperationPriority generalOperationPriority) {
+        return generalOperationBuilder.create(this, rightExpression);
     }
 }

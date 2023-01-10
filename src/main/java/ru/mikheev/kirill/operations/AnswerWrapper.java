@@ -1,14 +1,14 @@
 package ru.mikheev.kirill.operations;
 
-public class AnswerWrapper{
+public class AnswerWrapper {
 
-    private MathOperation answer;
+    private ExpressionMember answer;
 
-    public AnswerWrapper(MathOperation answer) {
+    public AnswerWrapper(ExpressionMember answer) {
         this.answer = answer;
     }
 
     public double getCalculatedValue() {
-        return answer.getCalculatedValue();
+        return answer.getValue();
     }
 }

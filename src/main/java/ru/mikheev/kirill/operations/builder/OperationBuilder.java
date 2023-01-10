@@ -1,41 +1,36 @@
 package ru.mikheev.kirill.operations.builder;
 
-import ru.mikheev.kirill.operations.Addition;
-import ru.mikheev.kirill.operations.Division;
-import ru.mikheev.kirill.operations.MathOperation;
-import ru.mikheev.kirill.operations.Multiplication;
-import ru.mikheev.kirill.operations.Number;
-import ru.mikheev.kirill.operations.Subtraction;
+import ru.mikheev.kirill.operations.ExpressionMember;
+import ru.mikheev.kirill.operations.OperationPriority;
+import ru.mikheev.kirill.operations.binary.Addition;
+import ru.mikheev.kirill.operations.binary.Division;
+import ru.mikheev.kirill.operations.binary.Multiplication;
+import ru.mikheev.kirill.operations.binary.Subtraction;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class OperationBuilder {
 
     private Map<String, OperationCreationMethod> builders;
-    private ArrayList<String> allowedOperations;
+    private List<String> allowedOperations = new ArrayList<>();
 
     public OperationBuilder() {
         init();
     }
 
-    public ArrayList<String> getAllowedOperations() {
-        ArrayList<String> copy = new ArrayList<>();
-        Collections.copy(allowedOperations, copy);
-         return copy;
+    public List<String> getAllowedOperations() {
+        return allowedOperations;
     }
 
-    public MathOperation buildMathOperation(String operationSign, MathOperation... args) {
+    public ExpressionMember buildMathOperation(String operationSign, ExpressionMember... args) {
         if(!builders.containsKey(operationSign)) {
             throw new NullPointerException(operationSign + " не поддерживаемый тип операции");
         }
         return builders.get(operationSign).create(args);
     }
 
-    public void rotateOperation(String operationSign, MathOperation oldExpression, Number nextNumber) {
-        oldExpression.rotateOperation(nextNumber, builders.get(operationSign));
+    public ExpressionMember rotateOperation(String operationSign, ExpressionMember oldExpression, ExpressionMember nextNumber) {
+        return oldExpression.rotateOperation(nextNumber, builders.get(operationSign), OperationPriority.getPriorityBySign(operationSign));
     }
 
     private void init() {
@@ -51,19 +46,19 @@ public class OperationBuilder {
         allowedOperations.add("/");
     }
 
-    private Addition createAddition(MathOperation... args) {
+    private Addition createAddition(ExpressionMember... args) {
         return new Addition(args[0], args[1]);
     }
 
-    private Subtraction createSubtraction(MathOperation... args) {
+    private Subtraction createSubtraction(ExpressionMember... args) {
         return new Subtraction(args[0], args[1]);
     }
 
-    private Multiplication createMultiplication(MathOperation... args) {
+    private Multiplication createMultiplication(ExpressionMember... args) {
         return new Multiplication(args[0], args[1]);
     }
 
-    private Division createDivision(MathOperation... args) {
+    private Division createDivision(ExpressionMember... args) {
         return new Division(args[0], args[1]);
     }
 }

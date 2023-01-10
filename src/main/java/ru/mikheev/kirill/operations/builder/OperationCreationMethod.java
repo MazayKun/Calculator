@@ -1,10 +1,10 @@
 package ru.mikheev.kirill.operations.builder;
 
-import ru.mikheev.kirill.operations.MathOperation;
+import ru.mikheev.kirill.operations.ExpressionMember;
 
 @FunctionalInterface
 public interface OperationCreationMethod {
 
-    MathOperation create(MathOperation... args);
+    ExpressionMember create(ExpressionMember... args);
 
 }

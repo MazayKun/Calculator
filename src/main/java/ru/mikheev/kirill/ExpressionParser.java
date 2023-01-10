@@ -1,7 +1,7 @@
 package ru.mikheev.kirill;
 
 import ru.mikheev.kirill.operations.AnswerWrapper;
-import ru.mikheev.kirill.operations.MathOperation;
+import ru.mikheev.kirill.operations.ExpressionMember;
 import ru.mikheev.kirill.operations.Number;
 import ru.mikheev.kirill.operations.OperationPriority;
 import ru.mikheev.kirill.operations.builder.OperationBuilder;
@@ -25,7 +25,8 @@ public class ExpressionParser {
     }
 
     public AnswerWrapper parseExpression(String expression) {
-        MathOperation lastOperation = null;
+        ExpressionMember lastToken = null;
+        ExpressionMember answer = null;
         String lastSign = null;
         Matcher matcher = pattern.matcher(expression);
         while (matcher.find()) {
@@ -35,6 +36,7 @@ public class ExpressionParser {
                 default  : {
                     double number;
                     try {
+                        var group = matcher.group();
                         number = Double.parseDouble(matcher.group());
                     }catch (NumberFormatException e) {
                         if(operationBuilder.getAllowedOperations().contains(matcher.group())) {
@@ -50,18 +52,19 @@ public class ExpressionParser {
                     }
                     Number newToken = new Number(number);
                     if(lastSign == null) {
-                        lastOperation = newToken;
+                        answer = newToken;
                     }else {
-                        if(lastOperation.getPriorityValue() > OperationPriority.getPriorityBySign(matcher.group()).getPriorityValue()) {
-                            lastOperation = operationBuilder.buildMathOperation(matcher.group(), lastOperation, newToken);
+                        if(answer.getPriority().getPriorityValue() >= OperationPriority.getPriorityBySign(lastSign).getPriorityValue()) {
+                            answer = operationBuilder.buildMathOperation(lastSign, answer, newToken);
                         }else{
-                            operationBuilder.rotateOperation(lastSign, lastOperation, newToken);
+                            answer = operationBuilder.rotateOperation(lastSign, answer, newToken);
                         }
+                        lastSign = null;
                     }
                 }
             }
         }
-        return null;
+        return new AnswerWrapper(answer);
     }
 
     public boolean verifyBracketsSequence(String expression) {
