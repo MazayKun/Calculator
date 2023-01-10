@@ -1,9 +1,7 @@
 package ru.mikheev.kirill;
 
-import ru.mikheev.kirill.operations.AnswerWrapper;
-import ru.mikheev.kirill.operations.ExpressionMember;
+import ru.mikheev.kirill.operations.*;
 import ru.mikheev.kirill.operations.Number;
-import ru.mikheev.kirill.operations.OperationPriority;
 import ru.mikheev.kirill.operations.builder.OperationBuilder;
 
 import java.util.regex.Matcher;
@@ -25,18 +23,29 @@ public class ExpressionParser {
     }
 
     public AnswerWrapper parseExpression(String expression) {
-        ExpressionMember lastToken = null;
+        Matcher matcher = pattern.matcher(expression);
+        return new AnswerWrapper(parseSubExpression(matcher));
+    }
+
+    private ExpressionMember parseSubExpression(Matcher matcher) {
         ExpressionMember answer = null;
         String lastSign = null;
-        Matcher matcher = pattern.matcher(expression);
+
         while (matcher.find()) {
             switch (matcher.group()) {
-                //case "(" :
-                //case ")" :
+                case "(" : {
+                    var bracketsExpression = new BracketsWrapper(parseSubExpression(matcher));
+                    if(answer == null) {
+                        answer = bracketsExpression;
+                    }else {
+                        answer = operationBuilder.buildMathOperation(lastSign, answer, bracketsExpression);
+                    }
+                    break;
+                }
+                case ")" : return answer;
                 default  : {
                     double number;
                     try {
-                        var group = matcher.group();
                         number = Double.parseDouble(matcher.group());
                     }catch (NumberFormatException e) {
                         if(operationBuilder.getAllowedOperations().contains(matcher.group())) {
@@ -64,7 +73,7 @@ public class ExpressionParser {
                 }
             }
         }
-        return new AnswerWrapper(answer);
+        return answer;
     }
 
     public boolean verifyBracketsSequence(String expression) {
